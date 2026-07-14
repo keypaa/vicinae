@@ -710,6 +710,8 @@ elseif (WIN32)
 		src/services/clipboard/win32/win32-clipboard-server.cpp
 		src/services/app-runtime/win32/win32-app-runtime.hpp
 		src/services/app-runtime/win32/win32-app-runtime.cpp
+		src/services/power-manager/win32/win32-power-manager.hpp
+		src/services/power-manager/win32/win32-power-manager.cpp
 	)
 	list(APPEND LIBS shell32 ole32 shlwapi user32 gdi32 advapi32 version windowsapp dwmapi)
 else()
