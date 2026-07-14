@@ -32,6 +32,8 @@ heaptrack*
 .claude/*
 !.claude/CLAUDE.md
 
+.superpowers/
+
 .omx/
 .codex/
 .gitnexus/
