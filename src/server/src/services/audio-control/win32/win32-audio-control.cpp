@@ -16,13 +16,11 @@ struct ComDeleter {
   }
 };
 
-template <typename T>
-using ComPtr = std::unique_ptr<T, ComDeleter>;
+template <typename T> using ComPtr = std::unique_ptr<T, ComDeleter>;
 
 ComPtr<IMMDeviceEnumerator> createEnumerator() {
   IMMDeviceEnumerator *raw = nullptr;
-  HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
-                                IID_PPV_ARGS(&raw));
+  HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL, IID_PPV_ARGS(&raw));
   return ComPtr<IMMDeviceEnumerator>(SUCCEEDED(hr) ? raw : nullptr);
 }
 
@@ -34,8 +32,8 @@ ComPtr<IMMDevice> defaultDevice(IMMDeviceEnumerator *enumerator, EDataFlow flow 
 
 ComPtr<IAudioEndpointVolume> endpointVolume(IMMDevice *device) {
   IAudioEndpointVolume *raw = nullptr;
-  HRESULT hr = device->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_ALL, nullptr,
-                                 reinterpret_cast<void **>(&raw));
+  HRESULT hr =
+      device->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_ALL, nullptr, reinterpret_cast<void **>(&raw));
   return ComPtr<IAudioEndpointVolume>(SUCCEEDED(hr) ? raw : nullptr);
 }
 
@@ -108,9 +106,7 @@ std::optional<float> Win32AudioControl::setVolume(float level) {
   return level;
 }
 
-std::optional<float> Win32AudioControl::adjustVolume(float delta) {
-  return setVolume(getVolume() + delta);
-}
+std::optional<float> Win32AudioControl::adjustVolume(float delta) { return setVolume(getVolume() + delta); }
 
 bool Win32AudioControl::isMuted() const {
   auto enumerator = createEnumerator();
@@ -225,7 +221,7 @@ bool Win32AudioControl::setDefaultSink(const QString &sinkName) {
 
       IPolicyConfig *policyConfig = nullptr;
       HRESULT hr = dev->Activate(__uuidof(IPolicyConfig), CLSCTX_ALL, nullptr,
-                                  reinterpret_cast<void **>(&policyConfig));
+                                 reinterpret_cast<void **>(&policyConfig));
       if (SUCCEEDED(hr)) {
         hr = policyConfig->SetDefaultEndpoint(dev, nullptr);
         policyConfig->Release();
