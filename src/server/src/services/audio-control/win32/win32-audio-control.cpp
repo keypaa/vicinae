@@ -12,19 +12,20 @@ namespace {
 MIDL_INTERFACE("CA286FC3-91FD-42C3-8E9B-CAAFA66242E3")
 IPolicyConfig : public IUnknown {
 public:
-  virtual HRESULT STDMETHODCALLTYPE GetMixFormat(void*, void**) = 0;
-  virtual HRESULT STDMETHODCALLTYPE GetDeviceFormat(void*, int, void**) = 0;
-  virtual HRESULT STDMETHODCALLTYPE SetDeviceFormat(void*, void*, void*) = 0;
-  virtual HRESULT STDMETHODCALLTYPE SetProcessingPeriod(void*, void*) = 0;
-  virtual HRESULT STDMETHODCALLTYPE GetSharedModeFormat(void*, void**, void**, void**) = 0;
-  virtual HRESULT STDMETHODCALLTYPE SetSharedModeFormat(void*, void*, void*, void*, void*) = 0;
-  virtual HRESULT STDMETHODCALLTYPE GetCurrentShareMode(void*, void**) = 0;
-  virtual HRESULT STDMETHODCALLTYPE SetDefaultEndpoint(void* dev, DWORD role) = 0;
-  virtual HRESULT STDMETHODCALLTYPE SetEndpointVisibility(void*, int) = 0;
+  virtual HRESULT STDMETHODCALLTYPE GetMixFormat(void *, void **) = 0;
+  virtual HRESULT STDMETHODCALLTYPE GetDeviceFormat(void *, int, void **) = 0;
+  virtual HRESULT STDMETHODCALLTYPE SetDeviceFormat(void *, void *, void *) = 0;
+  virtual HRESULT STDMETHODCALLTYPE SetProcessingPeriod(void *, void *) = 0;
+  virtual HRESULT STDMETHODCALLTYPE GetSharedModeFormat(void *, void **, void **, void **) = 0;
+  virtual HRESULT STDMETHODCALLTYPE SetSharedModeFormat(void *, void *, void *, void *, void *) = 0;
+  virtual HRESULT STDMETHODCALLTYPE GetCurrentShareMode(void *, void **) = 0;
+  virtual HRESULT STDMETHODCALLTYPE SetDefaultEndpoint(void *dev, DWORD role) = 0;
+  virtual HRESULT STDMETHODCALLTYPE SetEndpointVisibility(void *, int) = 0;
 };
 
 // {CA286FC3-91FD-42C3-8E9B-CAAFA66242E3}
-static const IID IID_IPolicyConfig = {0xCA286FC3, 0x91FD, 0x42C3, {0x8E, 0x9B, 0xCA, 0xFA, 0x66, 0x24, 0x2E, 0x33}};
+static const IID IID_IPolicyConfig = {
+    0xCA286FC3, 0x91FD, 0x42C3, {0x8E, 0x9B, 0xCA, 0xFA, 0x66, 0x24, 0x2E, 0x33}};
 
 struct ComDeleter {
   void operator()(IUnknown *p) const {
@@ -236,8 +237,8 @@ bool Win32AudioControl::setDefaultSink(const QString &sinkName) {
       collection->Release();
 
       IPolicyConfig *policyConfig = nullptr;
-      HRESULT hr = dev->Activate(IID_IPolicyConfig, CLSCTX_ALL, nullptr,
-                                 reinterpret_cast<void **>(&policyConfig));
+      HRESULT hr =
+          dev->Activate(IID_IPolicyConfig, CLSCTX_ALL, nullptr, reinterpret_cast<void **>(&policyConfig));
       if (SUCCEEDED(hr)) {
         hr = policyConfig->SetDefaultEndpoint(dev, nullptr);
         policyConfig->Release();
