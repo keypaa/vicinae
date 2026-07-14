@@ -18,6 +18,7 @@ QSystemTrayIcon::MessageIcon mapUrgency(AbstractDesktopNotificationClient::Urgen
 
 Win32NotificationClient::Win32NotificationClient() {
   m_trayIcon = new QSystemTrayIcon(this);
+  m_trayIcon->setIcon(QIcon(":/icons/vicinae.svg"));
   m_trayIcon->show();
 }
 
