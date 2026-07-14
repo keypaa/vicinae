@@ -723,6 +723,10 @@ elseif (WIN32)
 		src/services/files-service/win32/win32-file-indexer.cpp
 		src/services/calculator-service/qjsengine/qjsengine-calculator.hpp
 		src/services/calculator-service/qjsengine/qjsengine-calculator.cpp
+		src/services/snippet/win32/win32-snippet-server.hpp
+		src/services/snippet/win32/win32-snippet-server.cpp
+		src/services/paste/win32/win32-paste-service.hpp
+		src/services/paste/win32/win32-paste-service.cpp
 	)
 	list(APPEND LIBS shell32 ole32 shlwapi user32 gdi32 advapi32 version windowsapp dwmapi mmdevapi Qt6::Widgets)
 else()

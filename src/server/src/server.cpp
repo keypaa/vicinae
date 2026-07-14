@@ -65,6 +65,8 @@
 #include "services/snippet/linux-snippet-server.hpp"
 #elif defined(Q_OS_MACOS)
 #include "services/snippet/macos-snippet-server.hpp"
+#elif defined(Q_OS_WIN)
+#include "services/snippet/win32/win32-snippet-server.hpp"
 #else
 #include "services/snippet/null-snippet-server.hpp"
 #endif
@@ -76,6 +78,9 @@
 #endif
 #ifdef Q_OS_MACOS
 #include "services/paste/macos-paste-service.hpp"
+#endif
+#ifdef Q_OS_WIN
+#include "services/paste/win32/win32-paste-service.hpp"
 #endif
 #include "settings-controller/settings-controller.hpp"
 #include "services/tray/tray-service.hpp"
@@ -234,6 +239,9 @@ int startServer(const ServerLaunchOptions &launchOpts) {
 #elif defined(Q_OS_MACOS)
     auto snippetServer = std::make_unique<MacosSnippetServer>();
     auto platformPaste = std::unique_ptr<AbstractPasteService>(std::make_unique<MacosPasteService>());
+#elif defined(Q_OS_WIN)
+    auto snippetServer = std::make_unique<Win32SnippetServer>();
+    auto platformPaste = std::unique_ptr<AbstractPasteService>(std::make_unique<Win32PasteService>());
 #else
     auto snippetServer = std::make_unique<NullSnippetServer>();
     auto platformPaste = std::unique_ptr<AbstractPasteService>(std::make_unique<DummyPasteService>());
