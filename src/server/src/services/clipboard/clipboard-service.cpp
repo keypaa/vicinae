@@ -8,6 +8,9 @@
 #ifdef Q_OS_LINUX
 #include "x11/x11-clipboard-server.hpp"
 #endif
+#ifdef Q_OS_WIN
+#include "win32/win32-clipboard-server.hpp"
+#endif
 #include <qclipboard.h>
 #include <qimagereader.h>
 #include <qlogging.h>
@@ -621,6 +624,9 @@ ClipboardService::ClipboardService(const std::filesystem::path &path, std::optio
 #endif
 #ifdef Q_OS_MACOS
     factory.registerServer<MacosClipboardServer>();
+#endif
+#ifdef Q_OS_WIN
+    factory.registerServer<Win32ClipboardServer>();
 #endif
     m_clipboardServer = factory.createFirstActivatable();
     qInfo() << "Activated clipboard server" << m_clipboardServer->id();

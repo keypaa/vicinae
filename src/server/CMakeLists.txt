@@ -706,6 +706,8 @@ elseif (WIN32)
 		src/services/window-manager/win32/win32-window.cpp
 		src/services/window-manager/win32/win32-window-manager.hpp
 		src/services/window-manager/win32/win32-window-manager.cpp
+		src/services/clipboard/win32/win32-clipboard-server.hpp
+		src/services/clipboard/win32/win32-clipboard-server.cpp
 	)
 	list(APPEND LIBS shell32 ole32 shlwapi user32 gdi32 advapi32 version windowsapp dwmapi)
 else()
