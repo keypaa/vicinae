@@ -719,6 +719,8 @@ elseif (WIN32)
 		src/services/audio-control/win32/win32-audio-control.cpp
 		src/services/desktop-notification/win32/win32-notification-client.hpp
 		src/services/desktop-notification/win32/win32-notification-client.cpp
+		src/services/files-service/win32/win32-file-indexer.hpp
+		src/services/files-service/win32/win32-file-indexer.cpp
 	)
 	list(APPEND LIBS shell32 ole32 shlwapi user32 gdi32 advapi32 version windowsapp dwmapi mmdevapi Qt6::Widgets)
 else()
