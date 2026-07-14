@@ -721,6 +721,8 @@ elseif (WIN32)
 		src/services/desktop-notification/win32/win32-notification-client.cpp
 		src/services/files-service/win32/win32-file-indexer.hpp
 		src/services/files-service/win32/win32-file-indexer.cpp
+		src/services/calculator-service/qjsengine/qjsengine-calculator.hpp
+		src/services/calculator-service/qjsengine/qjsengine-calculator.cpp
 	)
 	list(APPEND LIBS shell32 ole32 shlwapi user32 gdi32 advapi32 version windowsapp dwmapi mmdevapi Qt6::Widgets)
 else()

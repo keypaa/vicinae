@@ -11,7 +11,7 @@
 #include <qobjectdefs.h>
 
 #ifdef Q_OS_WIN
-#include "dummy-calculator-backend.hpp"
+#include "qjsengine/qjsengine-calculator.hpp"
 #else
 #include "qalculate/qalculate-backend.hpp"
 #endif
@@ -350,7 +350,7 @@ CalculatorService::CalculatorService(OmniDatabase &db) : m_db(db) {
     candidates.emplace_back(std::make_unique<SoulverCoreCalculator>());
 #endif
 #ifdef Q_OS_WIN
-    candidates.emplace_back(std::make_unique<DummyCalculatorBackend>());
+    candidates.emplace_back(std::make_unique<QJSEngineCalculator>());
 #else
     candidates.emplace_back(std::make_unique<QalculateBackend>());
 #endif
