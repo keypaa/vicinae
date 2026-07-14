@@ -1,6 +1,5 @@
 #include "win32-app-runtime.hpp"
 #include "services/app-service/app-service.hpp"
-#include "services/app-service/windows/win-app.hpp"
 #include <QMetaObject>
 #include <atomic>
 #include <psapi.h>
