@@ -1,0 +1,15 @@
+{
+  "active_plan": "C:\\Users\\pauma\\Documents\\playground\\vicinae\\.sisyphus\\plans\\windows-port.md",
+  "started_at": "2026-06-05T12:01:40.871Z",
+  "session_ids": [
+    "ses_16863307fffebiEnfooz4EgCge",
+    "ses_1683e74d0ffeTNSW58HnKgHSqT"
+  ],
+  "session_origins": {
+    "ses_16863307fffebiEnfooz4EgCge": "direct",
+    "ses_1683e74d0ffeTNSW58HnKgHSqT": "appended"
+  },
+  "plan_name": "windows-port",
+  "agent": "atlas",
+  "task_sessions": {}
+}
