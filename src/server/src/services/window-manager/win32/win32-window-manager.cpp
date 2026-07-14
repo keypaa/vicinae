@@ -43,10 +43,6 @@ Win32WindowManager::~Win32WindowManager() {
     m_hookThread->deleteLater();
     m_hookThread = nullptr;
   }
-  HWINEVENTHOOK hook = m_eventHook.exchange(nullptr);
-  if (hook) {
-    UnhookWinEvent(hook);
-  }
   if (m_helperWindow) {
     DestroyWindow(m_helperWindow);
   }
@@ -70,7 +66,11 @@ void Win32WindowManager::start() {
   SetWindowLongPtrW(m_helperWindow, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
 
   m_stopEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
-  if (!m_stopEvent) return;
+  if (!m_stopEvent) {
+    DestroyWindow(m_helperWindow);
+    m_helperWindow = nullptr;
+    return;
+  }
 
   m_hookThread = QThread::create([this]() {
     HWINEVENTHOOK hook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, nullptr,
@@ -85,6 +85,8 @@ void Win32WindowManager::start() {
     while (running) {
       DWORD result = MsgWaitForMultipleObjects(1, handles, FALSE, INFINITE, QS_ALLINPUT);
       if (result == WAIT_OBJECT_0) {
+        running = false;
+      } else if (result == WAIT_FAILED) {
         running = false;
       } else {
         MSG msg{};
@@ -147,15 +149,17 @@ std::shared_ptr<AbstractWindowManager::AbstractWindow> Win32WindowManager::getFo
 }
 
 void Win32WindowManager::focusWindowSync(const AbstractWindow &window) const {
-  const auto &win32Window = static_cast<const Win32Window &>(window);
-  HWND hwnd = win32Window.handle();
+  const auto *win32Window = dynamic_cast<const Win32Window *>(&window);
+  if (!win32Window) return;
+  HWND hwnd = win32Window->handle();
   SetForegroundWindow(hwnd);
   BringWindowToTop(hwnd);
 }
 
 bool Win32WindowManager::closeWindow(const AbstractWindow &window) const {
-  const auto &win32Window = static_cast<const Win32Window &>(window);
-  HWND hwnd = win32Window.handle();
+  const auto *win32Window = dynamic_cast<const Win32Window *>(&window);
+  if (!win32Window) return false;
+  HWND hwnd = win32Window->handle();
   SendMessage(hwnd, WM_CLOSE, 0, 0);
   return true;
 }
