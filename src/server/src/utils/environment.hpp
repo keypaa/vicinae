@@ -194,11 +194,15 @@ inline std::string chassisType() {
 }
 
 inline std::optional<QString> detectAppLauncher() {
+#ifndef Q_OS_LINUX
+  return std::nullopt;
+#else
   QProcess proc;
   proc.start("uwsm", {"check", "is-active"});
   if (!proc.waitForFinished(1000) || proc.exitCode() != 0) return std::nullopt;
   if (!QStandardPaths::findExecutable("uwsm-app").isEmpty()) return "uwsm-app --";
   return "uwsm app --";
+#endif
 }
 
 } // namespace Environment
