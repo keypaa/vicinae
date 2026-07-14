@@ -702,8 +702,12 @@ elseif (WIN32)
 		src/services/app-service/windows/win-app-database.cpp
 		src/services/global-shortcuts/windows-global-shortcut-backend.hpp
 		src/services/global-shortcuts/windows-global-shortcut-backend.cpp
+		src/services/window-manager/win32/win32-window.hpp
+		src/services/window-manager/win32/win32-window.cpp
+		src/services/window-manager/win32/win32-window-manager.hpp
+		src/services/window-manager/win32/win32-window-manager.cpp
 	)
-	list(APPEND LIBS shell32 ole32 shlwapi user32 gdi32 advapi32 version windowsapp)
+	list(APPEND LIBS shell32 ole32 shlwapi user32 gdi32 advapi32 version windowsapp dwmapi)
 else()
 	list(APPEND SRCS
 		src/services/app-runtime/linux/linux-app-runtime.hpp
