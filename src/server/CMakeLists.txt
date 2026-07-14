@@ -4,6 +4,9 @@ set(LIBS)
 set(TARGET vicinae-server)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Network Svg Concurrent Quick Qml GuiPrivate QuickDialogs2 QuickControls2 ShaderTools)
+if (WIN32)
+	find_package(Qt6 REQUIRED COMPONENTS Widgets)
+endif()
 
 if (USE_SYSTEM_KF6 AND NOT WIN32)
 	find_package(KF6SyntaxHighlighting REQUIRED)
@@ -714,8 +717,10 @@ elseif (WIN32)
 		src/services/power-manager/win32/win32-power-manager.cpp
 		src/services/audio-control/win32/win32-audio-control.hpp
 		src/services/audio-control/win32/win32-audio-control.cpp
+		src/services/desktop-notification/win32/win32-notification-client.hpp
+		src/services/desktop-notification/win32/win32-notification-client.cpp
 	)
-	list(APPEND LIBS shell32 ole32 shlwapi user32 gdi32 advapi32 version windowsapp dwmapi mmdevapi)
+	list(APPEND LIBS shell32 ole32 shlwapi user32 gdi32 advapi32 version windowsapp dwmapi mmdevapi Qt6::Widgets)
 else()
 	list(APPEND SRCS
 		src/services/app-runtime/linux/linux-app-runtime.hpp
