@@ -31,9 +31,9 @@ void QJSEngineCalculator::stop() { m_engine.reset(); }
 QString QJSEngineCalculator::preprocessExpression(const QString &input) {
   QString expr = input.trimmed();
 
-  expr.replace(QChar(0x00D7), '*');   // × → *
-  expr.replace(QChar(0x00F7), '/');   // ÷ → /
-  expr.replace('^', "**");            // ^ → **
+  expr.replace(QChar(0x00D7), '*'); // × → *
+  expr.replace(QChar(0x00F7), '/'); // ÷ → /
+  expr.replace('^', "**");          // ^ → **
 
   expr.replace(QRegularExpression(R"((\d+(?:\.\d+)?)%)"), "($1/100)");
 
@@ -88,9 +88,7 @@ CalculatorResult QJSEngineCalculator::compute(const QString &question, const Com
   if (expression.isEmpty()) return fail("Empty expression");
 
   QJSValue result = m_engine->evaluate(expression);
-  if (result.isError()) {
-    return fail(result.toString());
-  }
+  if (result.isError()) { return fail(result.toString()); }
 
   if (!result.isNumber()) { return fail("Result is not a number"); }
 
@@ -104,7 +102,7 @@ CalculatorResult QJSEngineCalculator::compute(const QString &question, const Com
   return calcRes;
 }
 
-QFuture<QJSEngineCalculator::ComputeResult> QJSEngineCalculator::asyncCompute(
-    const QString &question, const ComputeOptions &opts) {
+QFuture<QJSEngineCalculator::ComputeResult> QJSEngineCalculator::asyncCompute(const QString &question,
+                                                                              const ComputeOptions &opts) {
   return QtConcurrent::run([this, question, opts]() -> ComputeResult { return compute(question, opts); });
 }
