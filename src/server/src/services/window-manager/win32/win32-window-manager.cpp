@@ -24,9 +24,7 @@ bool isWindowEligible(HWND hwnd) {
 
 BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam) {
   auto *windows = reinterpret_cast<AbstractWindowManager::WindowList *>(lParam);
-  if (isWindowEligible(hwnd)) {
-    windows->emplace_back(std::make_shared<Win32Window>(hwnd));
-  }
+  if (isWindowEligible(hwnd)) { windows->emplace_back(std::make_shared<Win32Window>(hwnd)); }
   return TRUE;
 }
 
@@ -35,20 +33,14 @@ BOOL CALLBACK enumWindowsProc(HWND hwnd, LPARAM lParam) {
 Win32WindowManager::Win32WindowManager() = default;
 
 Win32WindowManager::~Win32WindowManager() {
-  if (m_stopEvent) {
-    SetEvent(m_stopEvent);
-  }
+  if (m_stopEvent) { SetEvent(m_stopEvent); }
   if (m_hookThread) {
     m_hookThread->wait();
     m_hookThread->deleteLater();
     m_hookThread = nullptr;
   }
-  if (m_helperWindow) {
-    DestroyWindow(m_helperWindow);
-  }
-  if (m_stopEvent) {
-    CloseHandle(m_stopEvent);
-  }
+  if (m_helperWindow) { DestroyWindow(m_helperWindow); }
+  if (m_stopEvent) { CloseHandle(m_stopEvent); }
 }
 
 void Win32WindowManager::start() {
@@ -59,8 +51,8 @@ void Win32WindowManager::start() {
   wc.hInstance = GetModuleHandleW(nullptr);
   RegisterClassExW(&wc);
 
-  m_helperWindow = CreateWindowExW(0, HELPER_CLASS_NAME, L"VicinaeWMHelper", 0, 0, 0, 0, 0, nullptr,
-                                   nullptr, wc.hInstance, nullptr);
+  m_helperWindow = CreateWindowExW(0, HELPER_CLASS_NAME, L"VicinaeWMHelper", 0, 0, 0, 0, 0, nullptr, nullptr,
+                                   wc.hInstance, nullptr);
   if (!m_helperWindow) return;
 
   SetWindowLongPtrW(m_helperWindow, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(this));
@@ -102,17 +94,12 @@ void Win32WindowManager::start() {
   m_hookThread->start();
 }
 
-void Win32WindowManager::onFocusChanged() {
-  emit focusChanged();
-}
+void Win32WindowManager::onFocusChanged() { emit focusChanged(); }
 
-LRESULT CALLBACK Win32WindowManager::helperWndProc(HWND hwnd, UINT msg, WPARAM wParam,
-                                                   LPARAM lParam) {
+LRESULT CALLBACK Win32WindowManager::helperWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   if (msg == WM_VC_SETUP_HOOK) {
     auto *self = reinterpret_cast<Win32WindowManager *>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
-    if (self) {
-      self->m_eventHook.store(reinterpret_cast<HWINEVENTHOOK>(wParam));
-    }
+    if (self) { self->m_eventHook.store(reinterpret_cast<HWINEVENTHOOK>(wParam)); }
     return 0;
   }
 
@@ -125,15 +112,13 @@ LRESULT CALLBACK Win32WindowManager::helperWndProc(HWND hwnd, UINT msg, WPARAM w
   return DefWindowProcW(hwnd, msg, wParam, lParam);
 }
 
-void CALLBACK Win32WindowManager::winEventProc(HWINEVENTHOOK /*hook*/, DWORD /*event*/,
-                                               HWND hwnd, LONG /*idObject*/, LONG /*idChild*/,
-                                               DWORD /*dwEventThread*/, DWORD /*dwmsEventTime*/) {
+void CALLBACK Win32WindowManager::winEventProc(HWINEVENTHOOK /*hook*/, DWORD /*event*/, HWND hwnd,
+                                               LONG /*idObject*/, LONG /*idChild*/, DWORD /*dwEventThread*/,
+                                               DWORD /*dwmsEventTime*/) {
   if (!hwnd) return;
 
   HWND helper = FindWindowW(HELPER_CLASS_NAME, nullptr);
-  if (helper) {
-    PostMessage(helper, WM_VC_FOCUS_CHANGED, reinterpret_cast<WPARAM>(hwnd), 0);
-  }
+  if (helper) { PostMessage(helper, WM_VC_FOCUS_CHANGED, reinterpret_cast<WPARAM>(hwnd), 0); }
 }
 
 AbstractWindowManager::WindowList Win32WindowManager::listWindowsSync() const {

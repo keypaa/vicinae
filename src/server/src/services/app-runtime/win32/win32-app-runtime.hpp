@@ -25,8 +25,8 @@ private:
   void onForegroundChanged();
   DWORD findPidForApp(const AbstractApplication &app) const;
 
-  static void CALLBACK winEventProc(HWINEVENTHOOK hook, DWORD event, HWND hwnd, LONG idObject,
-                                    LONG idChild, DWORD dwEventThread, DWORD dwmsEventTime);
+  static void CALLBACK winEventProc(HWINEVENTHOOK hook, DWORD event, HWND hwnd, LONG idObject, LONG idChild,
+                                    DWORD dwEventThread, DWORD dwmsEventTime);
 
   AppService &m_appService;
   QTimer *m_pollTimer;

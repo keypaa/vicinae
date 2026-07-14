@@ -28,8 +28,8 @@ private:
   void onFocusChanged();
 
   static LRESULT CALLBACK helperWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-  static void CALLBACK winEventProc(HWINEVENTHOOK hook, DWORD event, HWND hwnd, LONG idObject,
-                                    LONG idChild, DWORD dwEventThread, DWORD dwmsEventTime);
+  static void CALLBACK winEventProc(HWINEVENTHOOK hook, DWORD event, HWND hwnd, LONG idObject, LONG idChild,
+                                    DWORD dwEventThread, DWORD dwmsEventTime);
 
   static constexpr wchar_t HELPER_CLASS_NAME[] = L"VicinaeWin32WMHelper";
   static constexpr UINT WM_VC_SETUP_HOOK = WM_APP;

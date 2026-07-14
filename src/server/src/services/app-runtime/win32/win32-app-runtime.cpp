@@ -34,27 +34,24 @@ Win32AppRuntime::Win32AppRuntime(AppService &appService) : m_appService(appServi
   m_pollTimer->start();
 
   s_instance.store(this, std::memory_order_release);
-  m_eventHook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, nullptr,
-                                winEventProc, 0, 0, WINEVENT_OUTOFCONTEXT);
+  m_eventHook = SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, nullptr, winEventProc, 0, 0,
+                                WINEVENT_OUTOFCONTEXT);
 
   refreshRunningCache();
 }
 
 Win32AppRuntime::~Win32AppRuntime() {
   s_instance.store(nullptr, std::memory_order_release);
-  if (m_eventHook) {
-    UnhookWinEvent(m_eventHook);
-  }
+  if (m_eventHook) { UnhookWinEvent(m_eventHook); }
 }
 
 void Win32AppRuntime::onForegroundChanged() { emit frontmostAppChanged(); }
 
 void CALLBACK Win32AppRuntime::winEventProc(HWINEVENTHOOK /*hook*/, DWORD /*event*/, HWND /*hwnd*/,
-                                            LONG /*idObject*/, LONG /*idChild*/,
-                                            DWORD /*dwEventThread*/, DWORD /*dwmsEventTime*/) {
+                                            LONG /*idObject*/, LONG /*idChild*/, DWORD /*dwEventThread*/,
+                                            DWORD /*dwmsEventTime*/) {
   if (auto *self = s_instance.load(std::memory_order_acquire)) {
-    QMetaObject::invokeMethod(self, [self]() { self->onForegroundChanged(); },
-                              Qt::QueuedConnection);
+    QMetaObject::invokeMethod(self, [self]() { self->onForegroundChanged(); }, Qt::QueuedConnection);
   }
 }
 
@@ -83,8 +80,7 @@ void Win32AppRuntime::refreshRunningCache() {
 
     std::wstring progPath = prog.toStdWString();
     size_t sep = progPath.find_last_of(L"\\/");
-    const wchar_t *progExe =
-        (sep != std::wstring::npos) ? progPath.c_str() + sep + 1 : progPath.c_str();
+    const wchar_t *progExe = (sep != std::wstring::npos) ? progPath.c_str() + sep + 1 : progPath.c_str();
 
     for (const auto &runningExe : runningExes) {
       if (_wcsicmp(progExe, runningExe.c_str()) == 0) {
@@ -190,8 +186,7 @@ DWORD Win32AppRuntime::findPidForApp(const AbstractApplication &app) const {
 
   std::wstring progPath = prog.toStdWString();
   size_t sep = progPath.find_last_of(L"\\/");
-  const wchar_t *progExe =
-      (sep != std::wstring::npos) ? progPath.c_str() + sep + 1 : progPath.c_str();
+  const wchar_t *progExe = (sep != std::wstring::npos) ? progPath.c_str() + sep + 1 : progPath.c_str();
 
   HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   if (snapshot == INVALID_HANDLE_VALUE) return 0;
