@@ -2,6 +2,7 @@
 #include "services/files-service/abstract-file-indexer.hpp"
 #include <QFileSystemWatcher>
 #include <QJsonObject>
+#include <atomic>
 #include <filesystem>
 #include <string>
 #include <vector>
@@ -28,8 +29,7 @@ private:
 
   QFileSystemWatcher m_watcher;
   std::vector<std::filesystem::path> m_searchPaths;
-  std::vector<std::filesystem::path> m_excludedPaths;
   std::string m_dbPath;
-  int m_scanCounter = 0;
+  std::atomic<int> m_scanCounter = 0;
   bool m_running = false;
 };

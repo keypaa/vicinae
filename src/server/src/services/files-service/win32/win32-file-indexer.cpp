@@ -32,11 +32,9 @@ bool shouldSkipEntry(const fs::directory_entry &entry) {
 
   std::error_code ec;
   if (entry.is_directory(ec)) {
-    static constexpr std::string_view SKIP_DIRS[] = {"__pycache__",  ".git",       ".svn",
-                                                     ".hg",         "node_modules", ".cache",
-                                                     ".npm",        ".cargo",      "AppData",
-                                                     ".local",      ".config",     ".vscode",
-                                                     ".idea",       ".claude",     ".opencode"};
+    static constexpr std::string_view SKIP_DIRS[] = {
+        "__pycache__", ".git",   ".svn",    ".hg",     "node_modules", ".cache",  ".npm",     ".cargo",
+        "AppData",     ".local", ".config", ".vscode", ".idea",        ".claude", ".opencode"};
     for (auto &skip : SKIP_DIRS) {
       if (filename == skip) return true;
     }
@@ -136,22 +134,26 @@ void Win32FileIndexer::start() {
   m_searchPaths = getDefaultSearchPaths();
   updateWatchedPaths();
 
-  QtConcurrent::run([this]() {
-    for (const auto &path : m_searchPaths) {
+  auto pathsCopy = m_searchPaths;
+  QtConcurrent::run([pathsCopy, this]() {
+    for (const auto &path : pathsCopy) {
       runFullScan(path);
     }
   });
 }
 
 void Win32FileIndexer::rebuildIndex() {
+  if (m_running) return;
+
   sqlite3 *db = nullptr;
   if (sqlite3_open_v2(m_dbPath.c_str(), &db, SQLITE_OPEN_READWRITE, nullptr) != SQLITE_OK) return;
 
   sqlite3_exec(db, "DELETE FROM indexed_file", nullptr, nullptr, nullptr);
   sqlite3_close_v2(db);
 
-  QtConcurrent::run([this]() {
-    for (const auto &path : m_searchPaths) {
+  auto pathsCopy = m_searchPaths;
+  QtConcurrent::run([pathsCopy, this]() {
+    for (const auto &path : pathsCopy) {
       runFullScan(path);
     }
   });
@@ -164,39 +166,23 @@ void Win32FileIndexer::preferenceValuesChanged(const QJsonObject &preferences) {
     if (v.isString()) newPaths.emplace_back(v.toString().toStdString());
   }
 
-  if (newPaths.empty()) {
-    newPaths = getDefaultSearchPaths();
-  }
-
-  m_excludedPaths.clear();
-  auto excludedPaths = preferences.value("excludedIndexingPaths").toArray();
-  for (const auto &v : excludedPaths) {
-    if (v.isString()) m_excludedPaths.emplace_back(v.toString().toStdString());
-  }
+  if (newPaths.empty()) { newPaths = getDefaultSearchPaths(); }
 
   m_searchPaths = std::move(newPaths);
   updateWatchedPaths();
 
-  QtConcurrent::run([this]() {
-    rebuildIndex();
-  });
+  QtConcurrent::run([this]() { rebuildIndex(); });
 }
 
 void Win32FileIndexer::updateWatchedPaths() {
   QStringList dirs;
   for (const auto &path : m_searchPaths) {
-    if (fs::is_directory(path)) {
-      dirs.append(QString::fromStdString(path.string()));
-    }
+    if (fs::is_directory(path)) { dirs.append(QString::fromStdString(path.string())); }
   }
 
   auto currentDirs = m_watcher.directories();
-  if (!currentDirs.isEmpty()) {
-    m_watcher.removePaths(currentDirs);
-  }
-  if (!dirs.isEmpty()) {
-    m_watcher.addPaths(dirs);
-  }
+  if (!currentDirs.isEmpty()) { m_watcher.removePaths(currentDirs); }
+  if (!dirs.isEmpty()) { m_watcher.addPaths(dirs); }
 }
 
 void Win32FileIndexer::runFullScan(const fs::path &root) {
@@ -204,12 +190,20 @@ void Win32FileIndexer::runFullScan(const fs::path &root) {
 
   int scanId = ++m_scanCounter;
 
-  ScanStatus status{.scanId = scanId, .kind = ScanKind::Full, .state = ScanState::Started, .entrypoint = root, .processedFileCount = 0};
+  ScanStatus status{.scanId = scanId,
+                    .kind = ScanKind::Full,
+                    .state = ScanState::Started,
+                    .entrypoint = root,
+                    .processedFileCount = 0};
   emit scanStatusChanged(status);
 
   sqlite3 *db = nullptr;
   if (sqlite3_open_v2(m_dbPath.c_str(), &db, SQLITE_OPEN_READWRITE, nullptr) != SQLITE_OK) {
-    ScanStatus fail{.scanId = scanId, .kind = ScanKind::Full, .state = ScanState::Failed, .entrypoint = root, .processedFileCount = 0};
+    ScanStatus fail{.scanId = scanId,
+                    .kind = ScanKind::Full,
+                    .state = ScanState::Failed,
+                    .entrypoint = root,
+                    .processedFileCount = 0};
     emit scanStatusChanged(fail);
     return;
   }
@@ -221,7 +215,11 @@ void Win32FileIndexer::runFullScan(const fs::path &root) {
   if (ec) {
     sqlite3_exec(db, "ROLLBACK", nullptr, nullptr, nullptr);
     sqlite3_close_v2(db);
-    ScanStatus fail{.scanId = scanId, .kind = ScanKind::Full, .state = ScanState::Failed, .entrypoint = root, .processedFileCount = 0};
+    ScanStatus fail{.scanId = scanId,
+                    .kind = ScanKind::Full,
+                    .state = ScanState::Failed,
+                    .entrypoint = root,
+                    .processedFileCount = 0};
     emit scanStatusChanged(fail);
     return;
   }
@@ -247,7 +245,8 @@ void Win32FileIndexer::runFullScan(const fs::path &root) {
 
     auto pathStr = entry.path().string();
     auto lastWrite = fs::last_write_time(entry, ec);
-    auto lastWriteSec = std::chrono::duration_cast<std::chrono::seconds>(lastWrite.time_since_epoch()).count();
+    auto lastWriteSec =
+        std::chrono::duration_cast<std::chrono::seconds>(lastWrite.time_since_epoch()).count();
     auto fileSize = entry.is_regular_file(ec) ? static_cast<int64_t>(entry.file_size(ec)) : 0;
     auto isDir = entry.is_directory(ec);
     auto cat = vicinae::fileCategoryFor(entry.path(), isDir);
@@ -263,7 +262,11 @@ void Win32FileIndexer::runFullScan(const fs::path &root) {
 
     count++;
     if (count % SCAN_BATCH_SIZE == 0) {
-      ScanStatus progress{.scanId = scanId, .kind = ScanKind::Full, .state = ScanState::Started, .entrypoint = root, .processedFileCount = static_cast<size_t>(count)};
+      ScanStatus progress{.scanId = scanId,
+                          .kind = ScanKind::Full,
+                          .state = ScanState::Started,
+                          .entrypoint = root,
+                          .processedFileCount = static_cast<size_t>(count)};
       emit scanStatusChanged(progress);
     }
   }
@@ -272,7 +275,11 @@ void Win32FileIndexer::runFullScan(const fs::path &root) {
   sqlite3_exec(db, "COMMIT", nullptr, nullptr, nullptr);
   sqlite3_close_v2(db);
 
-  ScanStatus done{.scanId = scanId, .kind = ScanKind::Full, .state = ScanState::Succeeded, .entrypoint = root, .processedFileCount = static_cast<size_t>(count)};
+  ScanStatus done{.scanId = scanId,
+                  .kind = ScanKind::Full,
+                  .state = ScanState::Succeeded,
+                  .entrypoint = root,
+                  .processedFileCount = static_cast<size_t>(count)};
   emit scanStatusChanged(done);
 }
 
@@ -281,12 +288,20 @@ void Win32FileIndexer::runIncrementalScan(const fs::path &root) {
 
   int scanId = ++m_scanCounter;
 
-  ScanStatus status{.scanId = scanId, .kind = ScanKind::Incremental, .state = ScanState::Started, .entrypoint = root, .processedFileCount = 0};
+  ScanStatus status{.scanId = scanId,
+                    .kind = ScanKind::Incremental,
+                    .state = ScanState::Started,
+                    .entrypoint = root,
+                    .processedFileCount = 0};
   emit scanStatusChanged(status);
 
   sqlite3 *db = nullptr;
   if (sqlite3_open_v2(m_dbPath.c_str(), &db, SQLITE_OPEN_READWRITE, nullptr) != SQLITE_OK) {
-    ScanStatus fail{.scanId = scanId, .kind = ScanKind::Incremental, .state = ScanState::Failed, .entrypoint = root, .processedFileCount = 0};
+    ScanStatus fail{.scanId = scanId,
+                    .kind = ScanKind::Incremental,
+                    .state = ScanState::Failed,
+                    .entrypoint = root,
+                    .processedFileCount = 0};
     emit scanStatusChanged(fail);
     return;
   }
@@ -298,7 +313,11 @@ void Win32FileIndexer::runIncrementalScan(const fs::path &root) {
   if (ec) {
     sqlite3_exec(db, "ROLLBACK", nullptr, nullptr, nullptr);
     sqlite3_close_v2(db);
-    ScanStatus fail{.scanId = scanId, .kind = ScanKind::Incremental, .state = ScanState::Failed, .entrypoint = root, .processedFileCount = 0};
+    ScanStatus fail{.scanId = scanId,
+                    .kind = ScanKind::Incremental,
+                    .state = ScanState::Failed,
+                    .entrypoint = root,
+                    .processedFileCount = 0};
     emit scanStatusChanged(fail);
     return;
   }
@@ -328,7 +347,8 @@ void Win32FileIndexer::runIncrementalScan(const fs::path &root) {
 
     auto pathStr = entry.path().string();
     auto lastWrite = fs::last_write_time(entry, ec);
-    auto lastWriteSec = std::chrono::duration_cast<std::chrono::seconds>(lastWrite.time_since_epoch()).count();
+    auto lastWriteSec =
+        std::chrono::duration_cast<std::chrono::seconds>(lastWrite.time_since_epoch()).count();
 
     sqlite3_bind_text(lookupStmt, 1, pathStr.c_str(), static_cast<int>(pathStr.size()), SQLITE_TRANSIENT);
     bool needsUpdate = true;
@@ -361,12 +381,16 @@ void Win32FileIndexer::runIncrementalScan(const fs::path &root) {
   sqlite3_exec(db, "COMMIT", nullptr, nullptr, nullptr);
   sqlite3_close_v2(db);
 
-  ScanStatus done{.scanId = scanId, .kind = ScanKind::Incremental, .state = ScanState::Succeeded, .entrypoint = root, .processedFileCount = static_cast<size_t>(count)};
+  ScanStatus done{.scanId = scanId,
+                  .kind = ScanKind::Incremental,
+                  .state = ScanState::Succeeded,
+                  .entrypoint = root,
+                  .processedFileCount = static_cast<size_t>(count)};
   emit scanStatusChanged(done);
 }
 
 QFuture<std::vector<IndexerFileResult>> Win32FileIndexer::queryAsync(std::string_view query,
-                                                                    const IndexerQueryParams &params) {
+                                                                     const IndexerQueryParams &params) {
   return QtConcurrent::run([this, q = std::string{query}, params]() -> std::vector<IndexerFileResult> {
     if (q.empty()) return {};
 
@@ -409,9 +433,7 @@ QFuture<std::vector<IndexerFileResult>> Win32FileIndexer::queryAsync(std::string
       auto *pathText = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
       auto cat = intToCategory(sqlite3_column_int(stmt, 1));
 
-      if (pathText) {
-        candidates.push_back(Candidate{.path = fs::path(pathText), .category = cat});
-      }
+      if (pathText) { candidates.push_back(Candidate{.path = fs::path(pathText), .category = cat}); }
     }
 
     sqlite3_finalize(stmt);
@@ -431,9 +453,7 @@ QFuture<std::vector<IndexerFileResult>> Win32FileIndexer::queryAsync(std::string
       auto filename = cand.path.filename().string();
       auto parentStr = cand.path.parent_path().string();
       auto score = matcher.fuzzy_match_v2_score_query(filename, q);
-      if (score <= 0) {
-        score = static_cast<int>(matcher.fuzzy_match_v2_score_query(parentStr, q) * 0.7);
-      }
+      if (score <= 0) { score = static_cast<int>(matcher.fuzzy_match_v2_score_query(parentStr, q) * 0.7); }
       if (score > 0) {
         scored.push_back(Scored{.path = std::move(cand.path), .score = score, .category = cand.category});
       }
@@ -449,9 +469,9 @@ QFuture<std::vector<IndexerFileResult>> Win32FileIndexer::queryAsync(std::string
 
     for (size_t i = 0; i < end; i++) {
       results.emplace_back(IndexerFileResult{.path = std::move(scored[i].path),
-                                              .rank = static_cast<double>(scored[i].score),
-                                              .category = scored[i].category,
-                                              .mimeType = std::nullopt});
+                                             .rank = static_cast<double>(scored[i].score),
+                                             .category = scored[i].category,
+                                             .mimeType = std::nullopt});
     }
 
     return results;
