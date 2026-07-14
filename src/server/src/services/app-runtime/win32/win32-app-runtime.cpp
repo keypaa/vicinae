@@ -144,6 +144,7 @@ bool Win32AppRuntime::activate(const AbstractApplication &app) const {
   EnumWindows(enumFindWindow, reinterpret_cast<LPARAM>(&data));
 
   if (data.hwnd) {
+    AllowSetForegroundWindow(ASFW_ANY);
     SetForegroundWindow(data.hwnd);
     BringWindowToTop(data.hwnd);
     return true;
@@ -161,7 +162,7 @@ bool Win32AppRuntime::quit(const AbstractApplication &app) const {
   EnumWindows(enumFindWindow, reinterpret_cast<LPARAM>(&data));
 
   if (data.hwnd) {
-    PostMessage(data.hwnd, WM_CLOSE, 0, 0);
+    SendMessage(data.hwnd, WM_CLOSE, 0, 0);
     return true;
   }
 

@@ -36,7 +36,7 @@ Win32WindowManager::~Win32WindowManager() {
   if (m_stopEvent) { SetEvent(m_stopEvent); }
   if (m_hookThread) {
     m_hookThread->wait();
-    m_hookThread->deleteLater();
+    delete m_hookThread;
     m_hookThread = nullptr;
   }
   if (m_helperWindow) { DestroyWindow(m_helperWindow); }
@@ -137,6 +137,7 @@ void Win32WindowManager::focusWindowSync(const AbstractWindow &window) const {
   const auto *win32Window = dynamic_cast<const Win32Window *>(&window);
   if (!win32Window) return;
   HWND hwnd = win32Window->handle();
+  AllowSetForegroundWindow(ASFW_ANY);
   SetForegroundWindow(hwnd);
   BringWindowToTop(hwnd);
 }
